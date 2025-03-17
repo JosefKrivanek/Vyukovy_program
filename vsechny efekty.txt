@@ -1,0 +1,33 @@
+
+    "AudioUnitPlugin",
+    "Bitcrush", #
+    "Chorus",   ##
+    "Clipping", #
+    "Compressor",   ##
+    "Convolution",
+    "Delay",    ##
+    "Distortion",   ##
+    "ExternalPlugin",
+    "GSMFullRateCompressor",
+    "Gain", ##
+    "HighShelfFilter",
+    "HighpassFilter",   ##
+    "IIRFilter",
+    "Invert",
+    "LadderFilter",
+    "Limiter",  #
+    "LowShelfFilter",
+    "LowpassFilter",    ##
+    "MP3Compressor",
+    "NoiseGate",    #
+    "PeakFilter",   #
+    "Phaser",   ##
+    "PitchShift",   ##
+    "Plugin",
+    "PluginContainer",
+    "Resample",
+    "Reverb",   ##
+    "VST3Plugin",
+    "io",
+    "process",
+    "utils",

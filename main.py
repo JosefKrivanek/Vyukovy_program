@@ -1,10 +1,11 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 import pedalboard as pd
 from pedalboard.io import AudioFile
 
 
-board = pd.Pedalboard([pd.Chorus(), pd.Compressor(threshold_db = -10, ratio= 2,attack_ms = 1,release_ms= 100), pd.Distortion(10), pd.Gain(100)])
+board = pd.Pedalboard([])
 
 
 with AudioFile('skibidi.wav') as f:
@@ -16,6 +17,11 @@ with AudioFile('skibidi.wav') as f:
       effected = board(chunk, f.samplerate, reset=False)
       o.write(effected)
 
+def test_boardu ():
+    print(f"Pedal board právě obsahuje: {board}")
+
+
+
 #   Zobrazování framu na efekty   #
 def on_tab_change(event):
     current_tab = hl_menu.index(hl_menu.select())  
@@ -26,6 +32,7 @@ def on_tab_change(event):
 
 def add_chorus():
     global chorus_frame
+    global rate_chorus
     if "chorus_frame" not in globals():
         chorus_frame = tk.LabelFrame(effects_frame, text="Chorus")
         chorus_frame.pack(side="left")
@@ -33,6 +40,8 @@ def add_chorus():
         slider1.pack()
     if chorus_var.get() == 1:
         chorus_frame.pack(side="left")
+        rate_chorus = slider1.get()
+        board.append(pd.Chorus(rate_hz=rate_chorus, depth=0 , feedback=0))
     else:
         chorus_frame.pack_forget()
 
@@ -101,14 +110,11 @@ def add_reverb():
 #   Hlavní okno   #
 root = tk.Tk()
 root.title("AudioApp v2")
-root.minsize(620,500)
+root.minsize(1080,600)
 
 #   Effects bar ##
 effects_frame = tk.LabelFrame(root, relief="sunken", height=100, width=620)
 effects_frame.pack(anchor="s", fill="x")
-
-
-
 
 
 #   Karty   #
@@ -135,7 +141,7 @@ help_btn = tk.Button(karta_soubor, text="help", command=1)
 help_btn.pack()
 
 ##  Přehled  ##
-play_btn = tk.Button(karta_prehled, text="Play", command=1)
+play_btn = tk.Button(karta_prehled, text="Play", command=test_boardu)
 play_btn.grid(row=1, column=1)
 
 stop_btn = tk.Button(karta_prehled, text="Stop", command=1)

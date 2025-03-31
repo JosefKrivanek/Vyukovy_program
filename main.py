@@ -18,8 +18,9 @@ with AudioFile('skibidi.wav') as f:
       o.write(effected)
 
 def test_boardu ():
-    print(f"Pedal board právě obsahuje: {board}")
-
+    print(f"Pedal board právě obsahuje: {board}")   #debug
+    print(f"rate_chorus = {chorus_effect}")           #debug
+        
 
 
 #   Zobrazování framu na efekty   #
@@ -30,80 +31,141 @@ def on_tab_change(event):
     else:  
         effects_frame.pack(anchor="s")  
 
+
+                                    #  Přidání chorus do boardu #
 def add_chorus():
-    global chorus_frame
-    global rate_chorus
+    global chorus_frame, slider_rate, chorus_effect
+
     if "chorus_frame" not in globals():
         chorus_frame = tk.LabelFrame(effects_frame, text="Chorus")
         chorus_frame.pack(side="left")
-        slider1 = tk.Scale(chorus_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
-        slider1.pack()
+        slider_rate = tk.Scale(chorus_frame, from_=100, to=0, label="Rate", command=lambda x: update_chorus())
+        slider_rate.pack()
+
     if chorus_var.get() == 1:
         chorus_frame.pack(side="left")
-        rate_chorus = slider1.get()
-        board.append(pd.Chorus(rate_hz=rate_chorus, depth=0 , feedback=0))
+        rate_chorus = int(slider_rate.get())
+        chorus_effect = pd.Chorus(rate_hz=rate_chorus, depth=0, feedback=0)
+
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
+            if isinstance(effect, pd.Chorus):
+                board.remove(effect)  # Odebrání existujícího Chorus efektu
+        
+        board.append(chorus_effect)  # Přidání nového chorus efektu
     else:
         chorus_frame.pack_forget()
+        # ❌ odebrání efektu
+        for effect in list(board):  
+            if isinstance(effect, pd.Chorus):
+                board.remove(effect)  # Odstranění chorus efektu
 
+    print(f"Pedalboard: {board}")  # Debug výpis
+
+def update_chorus():
+    global chorus_effect
+
+    if chorus_effect in board:
+        rate_chorus = int(slider_rate.get())
+        chorus_effect.rate_hz = rate_chorus  # Aktualizace hodnoty chorus efektu
+        print(f"🎚️ Aktualizován chorus efekt: rate_hz={rate_chorus}")  # Debug
+
+
+                                    #  Přidání compressor do boardu #
 def add_compressor():
-    global compressor_frame
-    if "compressor_frame" not in globals():
-        compressor_frame = tk.LabelFrame(effects_frame, text="Compressor")
-        compressor_frame.pack(side="left")
-        slider1 = tk.Scale(compressor_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
-        slider1.pack()
+    global Compressor_frame, slider_threshold, Compressor_effect
+
+    if "Compressor_frame" not in globals():
+        Compressor_frame = tk.LabelFrame(effects_frame, text="Compressor")
+        Compressor_frame.pack(side="left")
+        slider_threshold = tk.Scale(Compressor_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Compressor())
+        slider_threshold.pack()
     if compressor_var.get() == 1:
-        compressor_frame.pack(side="left")
+        Compressor_frame.pack(side="left")
+        threshold_db_Compressor = int(slider_threshold.get())
+        Compressor_effect = pd.Compressor(threshold_db=threshold_db_Compressor)
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
+            if isinstance(effect, pd.Compressor):
+                board.remove(effect)  # Odebrání existujícího Compressor efektu
+        board.append(Compressor_effect)  # Přidání nového Compressor efektu
     else:
-        compressor_frame.pack_forget()
+        Compressor_frame.pack_forget()
+        for effect in list(board):  
+            if isinstance(effect, pd.Compressor):
+                board.remove(effect)  # Odstranění Compressor efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
 
+def update_Compressor():
+    global Compressor_effect
+    if Compressor_effect in board:
+        threshold_db_Compressor = int(slider_threshold.get())
+        Compressor_effect.threshold_db = threshold_db_Compressor  # Aktualizace hodnoty Compressor efektu
+        print(f"🎚️ Aktualizován Compressor efekt: rate_hz={threshold_db_Compressor}")  # Debug
+
+
+
+                                    #  Přidání delay do boardu #
 def add_delay():
-    global delay_frame
-    if "delay_frame" not in globals():
-        delay_frame = tk.LabelFrame(effects_frame, text="Delay")
-        delay_frame.pack(side="left")
-        slider1 = tk.Scale(delay_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
-        slider1.pack()
-    if delay_var.get() == 1:
-        delay_frame.pack(side="left")
-    else:
-        delay_frame.pack_forget()
+    global Delay_frame, slider_s, Delay_effect
 
+    if "Delay_frame" not in globals():
+        Delay_frame = tk.LabelFrame(effects_frame, text="Delay")
+        Delay_frame.pack(side="left")
+        slider_s = tk.Scale(Delay_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Delay())
+        slider_s.pack()
+    if delay_var.get() == 1:
+        Delay_frame.pack(side="left")
+        delay_in_seconds = int(slider_s.get())
+        Delay_effect = pd.Delay(delay_seconds=delay_in_seconds)
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
+            if isinstance(effect, pd.Delay):
+                board.remove(effect)  # Odebrání existujícího Delay efektu
+        board.append(Delay_effect)  # Přidání nového Delay efektu
+    else:
+        Delay_frame.pack_forget()
+        for effect in list(board):  
+            if isinstance(effect, pd.Delay):
+                board.remove(effect)  # Odstranění Delay efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
+
+def update_Delay():
+    global Delay_effect
+    if Delay_effect in board:
+        delay_in_seconds = int(slider_s.get())
+        Delay_effect.delay_seconds = delay_in_seconds  # Aktualizace hodnoty Delay efektu
+        print(f"🎚️ Aktualizován Delay efekt: rate_hz={delay_in_seconds}")  # Debug
+
+
+
+                                    #  Přidání distortion do boardu #
 def add_distortion():
-    global distortion_frame
-    if "distortion_frame" not in globals():
-        distortion_frame = tk.LabelFrame(effects_frame, text="Distortion")
-        distortion_frame.pack(side="left")
-        slider1 = tk.Scale(distortion_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
+    global Distortion_frame, slider1, Distortion_effect
+
+    if "Distortion_frame" not in globals():
+        Distortion_frame = tk.LabelFrame(effects_frame, text="Distortion")
+        Distortion_frame.pack(side="left")
+        slider1 = tk.Scale(Distortion_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Distortion())
         slider1.pack()
     if distortion_var.get() == 1:
-        distortion_frame.pack(side="left")
+        Distortion_frame.pack(side="left")
+        Distortion_in_seconds = int(slider1.get())
+        Distortion_effect = pd.Distortion(drive_db=Distortion_in_seconds)
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
+            if isinstance(effect, pd.Distortion):
+                board.remove(effect)  # Odebrání existujícího Distortion efektu
+        board.append(Distortion_effect)  # Přidání nového Distortion efektu
     else:
-        distortion_frame.pack_forget()
+        Distortion_frame.pack_forget()
+        for effect in list(board):  
+            if isinstance(effect, pd.Distortion):
+                board.remove(effect)  # Odstranění Distortion efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
 
-def add_gain():
-    global gain_frame
-    if "gain_frame" not in globals():
-        gain_frame = tk.LabelFrame(effects_frame, text="Gain")
-        gain_frame.pack(side="left")
-        slider1 = tk.Scale(gain_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
-        slider1.pack()
-    if gain_var.get() == 1:
-        gain_frame.pack(side="left")
-    else:
-        gain_frame.pack_forget()
-
-def add_reverb():
-    global reverb_frame
-    if "reverb_frame" not in globals():
-        reverb_frame = tk.LabelFrame(effects_frame, text="Reverb")
-        reverb_frame.pack(side="left")
-        slider1 = tk.Scale(reverb_frame, from_=100, to=0, label="Nějaky parametr", command=1 )
-        slider1.pack()
-    if reverb_var.get() == 1:
-        reverb_frame.pack(side="left")
-    else:
-        reverb_frame.pack_forget()
+def update_Distortion():
+    global Distortion_effect
+    if Distortion_effect in board:
+        Distortion_in_seconds = int(slider1.get())
+        Distortion_effect.drive_db = Distortion_in_seconds  # Aktualizace hodnoty Distortion efektu
+        print(f"🎚️ Aktualizován Distortion efekt: rate_hz={Distortion_in_seconds}")  # Debug
 
 
 
@@ -176,12 +238,12 @@ distortion_btn.grid(row=1, column=4)
 
 gain_var = tk.IntVar()
 gain_var.set(0)
-gain_btn = tk.Checkbutton(karta_efekty, text="gain", variable=gain_var, command=add_gain)
+gain_btn = tk.Checkbutton(karta_efekty, text="gain", variable=gain_var, command=1)
 gain_btn.grid(row=1, column=5)
 
 reverb_var = tk.IntVar()
 reverb_var.set(0)
-reverb_btn = tk.Checkbutton(karta_efekty, text="reverb", variable=reverb_var, command=add_reverb)
+reverb_btn = tk.Checkbutton(karta_efekty, text="reverb", variable=reverb_var, command=1)
 reverb_btn.grid(row=1, column=6)
 
 

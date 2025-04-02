@@ -1,25 +1,43 @@
 import os
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 import pedalboard as pd
 from pedalboard.io import AudioFile
 
 
+def load_file():
+    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav;"), ("All Files", "*.*")])  # Otevře dialog pro výběr souboru
+    if file_path:  # Pokud byl vybrán soubor
+        print(f"Načtený soubor: {file_path}")  # Debug výpis
+        global loaded_file
+        loaded_file = file_path  # Uložení cesty k souboru do globální proměnné
+
+        # Získání pouze názvu souboru (bez cesty)
+        file_name = os.path.basename(file_path)
+
+
+
 board = pd.Pedalboard([])
 
+def process_audio():
+    if loaded_file:
+        with AudioFile(loaded_file) as f:  # Otevřeme soubor pro čtení
+            print(f"Soubor '{loaded_file}' má {f.samplerate} Hz a {f.num_channels} kanálů")
+            audio = f.read(f.frames)  # Načteme celý soubor
+            
+        # 🛠️ Zpracujeme audio efekty
+        effected = board(audio, f.samplerate, reset=False)
 
-with AudioFile('skibidi.wav') as f:
-  
-  with AudioFile('output.wav', 'w', f.samplerate, f.num_channels) as o:
-  
-    while f.tell() < f.frames:
-      chunk = f.read(f.samplerate)
-      effected = board(chunk, f.samplerate, reset=False)
-      o.write(effected)
+        # Uložíme výstup
+        with AudioFile('output.wav', 'w', f.samplerate, f.num_channels) as o:
+            o.write(effected)
+        print("✅ Export dokončen: output.wav")
+
+
 
 def test_boardu ():
     print(f"Pedal board právě obsahuje: {board}")   #debug
-    print(f"rate_chorus = {chorus_effect}")           #debug
         
 
 
@@ -50,7 +68,7 @@ def add_chorus():
         for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
             if isinstance(effect, pd.Chorus):
                 board.remove(effect)  # Odebrání existujícího Chorus efektu
-        
+
         board.append(chorus_effect)  # Přidání nového chorus efektu
     else:
         chorus_frame.pack_forget()
@@ -59,7 +77,7 @@ def add_chorus():
             if isinstance(effect, pd.Chorus):
                 board.remove(effect)  # Odstranění chorus efektu
 
-    print(f"Pedalboard: {board}")  # Debug výpis
+    print(f"Pedalboard: {board}")  # Debug 
 
 def update_chorus():
     global chorus_effect
@@ -193,10 +211,10 @@ hl_menu.add(karta_efekty, text="Efekty")
 
 
 ##  Soubor  ##
-load_btn = tk.Button(karta_soubor, text="Load", command=1)
+load_btn = tk.Button(karta_soubor, text="Load", command=load_file)
 load_btn.pack()
 
-save_btn = tk.Button(karta_soubor, text="Save", command=1)
+save_btn = tk.Button(karta_soubor, text="Save", command=process_audio)
 save_btn.pack()
 
 help_btn = tk.Button(karta_soubor, text="help", command=1)

@@ -13,13 +13,13 @@ Tento projekt je vzdělávací program v jazyce Python, zaměřený na manipulac
 
 Pro lokální nastavení projektu postupujte podle těchto kroků:
 
-1. Klonujte repozitář:
+1. Klonujte repozitář: 
 git clone https://github.com/JosefKrivanek/Vyukovy_program.git
 
-2. Nainstalujte závislosti:
+2. Nainstalujte potřebné knihovny: 
 pip install -r requirements.txt
 
 
-3. Spusťte program:
+3. Spusťte program: 
 python main.py
  

@@ -373,8 +373,8 @@ load_btn.pack(pady=10)
 save_btn = tk.Button(karta_soubor, text="Save",font=("Bahnschrift", 12,"bold"), padx=5, pady=5, bd=8, command=save_audio, bg=BTN_BG, fg=BTN_FG)
 save_btn.pack( pady=10)
 
-help_btn = tk.Button(karta_soubor, text="help",font=("Bahnschrift", 12,"bold"), padx=5, pady=5, bd=8, command=1, bg=BTN_BG, fg=BTN_FG)
-help_btn.pack( pady=10)
+#help_btn = tk.Button(karta_soubor, text="help",font=("Bahnschrift", 12,"bold"), padx=5, pady=5, bd=8, command=1, bg=BTN_BG, fg=BTN_FG)
+#help_btn.pack( pady=10)
 
 ##  Přehled  ##
 play_btn = tk.Button(karta_prehled, text="Play",font=("Bahnschrift", 12,"bold"), padx=5, pady=5, bd=8, command=lambda: (process_audio(), play_audio()), bg=BTN_BG, fg=BTN_FG)

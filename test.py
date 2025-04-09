@@ -1,111 +1,23 @@
-import os       # načítání a ukládání audia
-import tkinter as tk    #GUI
-from tkinter import ttk 
+import os
+import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
-import pedalboard as pd # efekty na audio
+import pedalboard as pd
 from pedalboard.io import AudioFile
-import sounddevice as sd    #pčehrávání audia
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import sounddevice as sd
 
 
-BG_COLOR = "#1e1e1e"  # tmavá šedá pro pozadí
-BTN_BG = "#3e3e3e"  # tmavá šedá pro tlačítka
-BTN_FG = "#f5a623"  # oranžová pro text na tlačítkách
-CHECK_FG = "#f5a623"  # oranžová pro text u checkboxů
-GRAPH_COLOR = "#f5a623"  # oranžová pro křivky grafu
-
-    ## Globální proměnné ##
-loaded_file = None
-waveform_canvas = None
-board = pd.Pedalboard([])
-
-
-def process_audio():
-    if loaded_file:
-        with AudioFile(loaded_file) as f:  # Otevřeme soubor pro čtení
-            print(f"Soubor '{loaded_file}' má {f.samplerate} Hz a {f.num_channels} kanálů")
-            audio = f.read(f.frames)  # Načteme celý soubor
-            
-        # 🛠️ Zpracujeme audio efekty
-        effected = board(audio, f.samplerate, reset=False)
-
-        # Uložíme výstup
-        with AudioFile('output.wav', 'w', f.samplerate, f.num_channels) as o:
-            o.write(effected)
-        print("✅ Export dokončen: output.wav")   #debug
-        #plot_waveform("output.wav")
-
-def kokote_pojebany_beztak_za_to_muzez_TY():
-    plot_waveform("output.wav")
-
-        
 
 def load_file():
-    global loaded_file
-    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav"), ("All Files", "*.*")])
-    if file_path:
-        print(f"Načtený soubor: {file_path}")
-        loaded_file = file_path
-        plot_waveform(loaded_file)  # Aktualizace grafu
+    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav;"), ("All Files", "*.*")])  # Otevře dialog pro výběr souboru
+    if file_path:  # Pokud byl vybrán soubor
+        print(f"Načtený soubor: {file_path}")  # Debug výpis
+        global loaded_file
+        loaded_file = file_path  # Uložení cesty k souboru do globální proměnné
 
-
-def save_audio():
-    """Umožní uživateli vybrat místo a název pro uložení souboru"""
-    output_file_path = filedialog.asksaveasfilename(defaultextension=".wav", filetypes=[("WAV Files", "*.wav"), ("All Files", "*.*")],title="Uložit audio jako")
-
-    if output_file_path:  # Pokud uživatel zvolil cestu
-        if loaded_file:  # Pokud je soubor načtený
-            with AudioFile(loaded_file) as f:
-                audio_data = f.read(f.frames)  # Načte všechny snímky zvuku
-                processed_audio = board(audio_data, f.samplerate, reset=False)  # Aplikuje efekty na audio
-
-                # Uložení upraveného zvuku do vybrané cesty
-                with AudioFile(output_file_path, 'w', f.samplerate, f.num_channels) as o:
-                    o.write(processed_audio)  # Uložení do souboru
-                print(f"Upravené audio bylo uloženo do: {output_file_path}")
-
-
-def plot_waveform(output_file_path, max_samples=10_000, chunk_size=1024):
-    global waveform_canvas
-
-    with AudioFile(output_file_path) as f:
-        samplerate = f.samplerate / 1000  
-        total_frames = f.frames
-        num_channels = f.num_channels
-        step = max(1, total_frames // max_samples)
-        samples = []
-
-        for _ in range(0, total_frames, chunk_size):
-            audio_chunk = f.read(chunk_size)
-            if audio_chunk is None:
-                break
-            if num_channels > 1:
-                audio_chunk = np.mean(audio_chunk, axis=0)
-
-            samples.append(audio_chunk[::step])
-        audio_data = np.concatenate(samples, axis=0) if samples else np.array([])
-    time = np.linspace(0, len(audio_data) * step / samplerate, num=len(audio_data))
-
-    # Zničíme starý graf, pokud existuje
-    if waveform_canvas is not None:
-        waveform_canvas.get_tk_widget().destroy()
-        waveform_canvas = None
-
-    #  Nový graf
-    fig = Figure(figsize=(6, 2), dpi=150)
-    ax = fig.add_subplot(111)
-    ax.plot(time, audio_data, color="blue", linewidth=0.8)
-
-    waveform_canvas = FigureCanvasTkAgg(fig, master=visual_frame)
-    waveform_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-    waveform_canvas.draw()
-
-
-
-
+        # Získání pouze názvu souboru (bez cesty)
+        file_name = os.path.basename(file_path)
 
 def play_audio():
     if loaded_file:
@@ -122,9 +34,22 @@ def play_audio():
         # Přehrání zvuku
         sd.play(audio, samplerate)
 
+board = pd.Pedalboard([])
 
-def stop_audio():
-    sd.stop()
+def process_audio():
+    if loaded_file:
+        with AudioFile(loaded_file) as f:  # Otevřeme soubor pro čtení
+            print(f"Soubor '{loaded_file}' má {f.samplerate} Hz a {f.num_channels} kanálů")
+            audio = f.read(f.frames)  # Načteme celý soubor
+            
+        # 🛠️ Zpracujeme audio efekty
+        effected = board(audio, f.samplerate, reset=False)
+
+        # Uložíme výstup
+        with AudioFile('output.wav', 'w', f.samplerate, f.num_channels) as o:
+            o.write(effected)
+        print("✅ Export dokončen: output.wav")
+
 
 
 def test_boardu ():
@@ -148,7 +73,7 @@ def add_chorus():
     if "chorus_frame" not in globals():
         chorus_frame = tk.LabelFrame(effects_frame, text="Chorus")
         chorus_frame.pack(side="left")
-        slider_rate = tk.Scale(chorus_frame, from_=15, to=0.1, label="Rate", command=lambda x: update_chorus())
+        slider_rate = tk.Scale(chorus_frame, from_=100, to=0, label="Rate", command=lambda x: update_chorus())
         slider_rate.pack()
 
     if chorus_var.get() == 1:
@@ -163,7 +88,7 @@ def add_chorus():
         board.append(chorus_effect)  # Přidání nového chorus efektu
     else:
         chorus_frame.pack_forget()
-        # odebrání efektu
+        # ❌ odebrání efektu
         for effect in list(board):  
             if isinstance(effect, pd.Chorus):
                 board.remove(effect)  # Odstranění chorus efektu
@@ -186,29 +111,29 @@ def add_compressor():
     if "Compressor_frame" not in globals():
         Compressor_frame = tk.LabelFrame(effects_frame, text="Compressor")
         Compressor_frame.pack(side="left")
-        slider_threshold = tk.Scale(Compressor_frame, from_=6, to=-60, label="Threshold dB", command=lambda x: update_Compressor())
+        slider_threshold = tk.Scale(Compressor_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Compressor())
         slider_threshold.pack()
     if compressor_var.get() == 1:
         Compressor_frame.pack(side="left")
         threshold_db_Compressor = int(slider_threshold.get())
         Compressor_effect = pd.Compressor(threshold_db=threshold_db_Compressor)
-        for effect in list(board): 
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
             if isinstance(effect, pd.Compressor):
-                board.remove(effect)
-        board.append(Compressor_effect)  
+                board.remove(effect)  # Odebrání existujícího Compressor efektu
+        board.append(Compressor_effect)  # Přidání nového Compressor efektu
     else:
         Compressor_frame.pack_forget()
         for effect in list(board):  
             if isinstance(effect, pd.Compressor):
-                board.remove(effect)  
-    print(f"Pedalboard: {board}")  
+                board.remove(effect)  # Odstranění Compressor efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
 
 def update_Compressor():
     global Compressor_effect
     if Compressor_effect in board:
         threshold_db_Compressor = int(slider_threshold.get())
-        Compressor_effect.threshold_db = threshold_db_Compressor  
-        print(f"🎚️ Aktualizován Compressor efekt: threshold dB={threshold_db_Compressor}")  
+        Compressor_effect.threshold_db = threshold_db_Compressor  # Aktualizace hodnoty Compressor efektu
+        print(f"🎚️ Aktualizován Compressor efekt: rate_hz={threshold_db_Compressor}")  # Debug
 
 
 
@@ -219,66 +144,64 @@ def add_delay():
     if "Delay_frame" not in globals():
         Delay_frame = tk.LabelFrame(effects_frame, text="Delay")
         Delay_frame.pack(side="left")
-        slider_s = tk.Scale(Delay_frame, from_=30, to=0.1, label="Delay ms", command=lambda x: update_Delay())
+        slider_s = tk.Scale(Delay_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Delay())
         slider_s.pack()
     if delay_var.get() == 1:
         Delay_frame.pack(side="left")
         delay_in_seconds = int(slider_s.get())
         Delay_effect = pd.Delay(delay_seconds=delay_in_seconds)
-        for effect in list(board):  
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
             if isinstance(effect, pd.Delay):
-                board.remove(effect)  
-        board.append(Delay_effect)  
+                board.remove(effect)  # Odebrání existujícího Delay efektu
+        board.append(Delay_effect)  # Přidání nového Delay efektu
     else:
         Delay_frame.pack_forget()
         for effect in list(board):  
             if isinstance(effect, pd.Delay):
-                board.remove(effect)  
-    print(f"Pedalboard: {board}")  
+                board.remove(effect)  # Odstranění Delay efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
 
 def update_Delay():
     global Delay_effect
     if Delay_effect in board:
         delay_in_seconds = int(slider_s.get())
-        Delay_effect.delay_seconds = delay_in_seconds  
-        print(f"🎚️ Aktualizován Delay efekt: delay ms={delay_in_seconds}")  
+        Delay_effect.delay_seconds = delay_in_seconds  # Aktualizace hodnoty Delay efektu
+        print(f"🎚️ Aktualizován Delay efekt: rate_hz={delay_in_seconds}")  # Debug
 
 
 
                                     #  Přidání distortion do boardu #
 def add_distortion():
-    global Distortion_frame, slider_dis, Distortion_effect
+    global Distortion_frame, slider1, Distortion_effect
 
     if "Distortion_frame" not in globals():
         Distortion_frame = tk.LabelFrame(effects_frame, text="Distortion")
         Distortion_frame.pack(side="left")
-        slider_dis = tk.Scale(Distortion_frame, from_=100, to=0, label="Drive dB", command=lambda x: update_Distortion())
-        slider_dis.pack()
+        slider1 = tk.Scale(Distortion_frame, from_=100, to=0, label="Threshold", command=lambda x: update_Distortion())
+        slider1.pack()
     if distortion_var.get() == 1:
         Distortion_frame.pack(side="left")
-        Distortion_in_seconds = int(slider_dis.get())
+        Distortion_in_seconds = int(slider1.get())
         Distortion_effect = pd.Distortion(drive_db=Distortion_in_seconds)
-        for effect in list(board):  
+        for effect in list(board):  # Použijeme kopii boardu, aby bylo bezpečné ho upravovat
             if isinstance(effect, pd.Distortion):
-                board.remove(effect)  
-        board.append(Distortion_effect)  
+                board.remove(effect)  # Odebrání existujícího Distortion efektu
+        board.append(Distortion_effect)  # Přidání nového Distortion efektu
     else:
         Distortion_frame.pack_forget()
         for effect in list(board):  
             if isinstance(effect, pd.Distortion):
-                board.remove(effect)  
-    print(f"Pedalboard: {board}")  
+                board.remove(effect)  # Odstranění Distortion efektu
+    print(f"Pedalboard: {board}")  # Debug výpis
 
 def update_Distortion():
     global Distortion_effect
     if Distortion_effect in board:
-        Distortion_in_seconds = int(slider_dis.get())
-        Distortion_effect.drive_db = Distortion_in_seconds  
-        print(f"🎚️ Aktualizován Distortion efekt: drive dB={Distortion_in_seconds}")  
+        Distortion_in_seconds = int(slider1.get())
+        Distortion_effect.drive_db = Distortion_in_seconds  # Aktualizace hodnoty Distortion efektu
+        print(f"🎚️ Aktualizován Distortion efekt: rate_hz={Distortion_in_seconds}")  # Debug
 
-
-
-                                    #  Přidání Gain do boardu #
+                                   #  Přidání Gain do boardu #
 def add_Gain():
     global Gain_frame, slider_gai, Gain_effect
 
@@ -348,16 +271,9 @@ def update_Reverb():
 root = tk.Tk()
 root.title("AudioApp v2")
 root.minsize(1080,600)
-root.configure(bg=BG_COLOR)
-
-# Nastavení ttk stylu pro barevné schéma
-style = ttk.Style()
-style.configure("TFrame", background=BG_COLOR)
-style.configure("TButton", background=BTN_BG, foreground=BTN_FG)
-style.configure("TCheckbutton", background=BG_COLOR, foreground=CHECK_FG)
 
 #   Effects bar ##
-effects_frame = tk.LabelFrame(root, relief="sunken", height=100, width=620, bg=BG_COLOR, fg=BTN_FG)
+effects_frame = tk.LabelFrame(root, relief="sunken", height=100, width=620)
 effects_frame.pack(anchor="s", fill="x")
 
 
@@ -365,9 +281,9 @@ effects_frame.pack(anchor="s", fill="x")
 hl_menu = ttk.Notebook(root)
 hl_menu.pack(expand=True, fill="both")
 
-karta_soubor = ttk.Frame(hl_menu, style="TFrame")
-karta_prehled = ttk.Frame(hl_menu, style="TFrame")
-karta_efekty = ttk.Frame(hl_menu, style="TFrame")
+karta_soubor = ttk.Frame(hl_menu)
+karta_prehled = ttk.Frame(hl_menu)
+karta_efekty = ttk.Frame(hl_menu)
 
 hl_menu.add(karta_soubor, text="Soubor")
 hl_menu.add(karta_prehled, text="Přehled")
@@ -375,23 +291,27 @@ hl_menu.add(karta_efekty, text="Efekty")
 
 
 ##  Soubor  ##
-load_btn = tk.Button(karta_soubor, text="Load", command=load_file, bg=BTN_BG, fg=BTN_FG)
+load_btn = tk.Button(karta_soubor, text="Load", command=load_file)
 load_btn.pack()
 
-save_btn = tk.Button(karta_soubor, text="Save", command=save_audio, bg=BTN_BG, fg=BTN_FG)
+save_btn = tk.Button(karta_soubor, text="Save", command=process_audio)
 save_btn.pack()
 
-help_btn = tk.Button(karta_soubor, text="help", command=1, bg=BTN_BG, fg=BTN_FG)
+help_btn = tk.Button(karta_soubor, text="help", command=play_audio)
 help_btn.pack()
 
+def ooooo():
+    process_audio()
+    play_audio()
+
 ##  Přehled  ##
-play_btn = tk.Button(karta_prehled, text="Play", command=lambda: (process_audio(), play_audio()), bg=BTN_BG, fg=BTN_FG)
+play_btn = tk.Button(karta_prehled, text="Play", command=ooooo)
 play_btn.grid(row=1, column=1)
 
-stop_btn = tk.Button(karta_prehled, text="Stop", command=stop_audio, bg=BTN_BG, fg=BTN_FG)
+stop_btn = tk.Button(karta_prehled, text="Stop", command=1)
 stop_btn.grid(row=1, column=2)
 
-visual_frame = tk.LabelFrame(karta_prehled, relief="sunken", height=100, width=620, bg=BG_COLOR)
+visual_frame = tk.LabelFrame(karta_prehled, relief="sunken", height=100, width=620)
 visual_frame.grid(row=2, column=1, columnspan=2)
 
 
@@ -400,32 +320,32 @@ visual_frame.grid(row=2, column=1, columnspan=2)
 
 chorus_var = tk.IntVar()
 chorus_var.set(0)
-chorus_btn = tk.Checkbutton(karta_efekty, text="Chorus", variable=chorus_var, command=add_chorus, bg=BG_COLOR, fg=CHECK_FG)
+chorus_btn = tk.Checkbutton(karta_efekty, text="Chorus", variable=chorus_var, command=add_chorus)
 chorus_btn.grid(row=1, column=1)
 
 compressor_var = tk.IntVar()
 compressor_var.set(0)
-compressor_btn = tk.Checkbutton(karta_efekty, text="compressor", variable=compressor_var, command=add_compressor, bg=BG_COLOR, fg=CHECK_FG)
+compressor_btn = tk.Checkbutton(karta_efekty, text="compressor", variable=compressor_var, command=add_compressor)
 compressor_btn.grid(row=1, column=2)
 
 delay_var = tk.IntVar()
 delay_var.set(0)
-delay_btn = tk.Checkbutton(karta_efekty, text="delay", variable=delay_var, command=add_delay, bg=BG_COLOR, fg=CHECK_FG)
+delay_btn = tk.Checkbutton(karta_efekty, text="delay", variable=delay_var, command=add_delay)
 delay_btn.grid(row=1, column=3)
 
 distortion_var = tk.IntVar()
 distortion_var.set(0)
-distortion_btn = tk.Checkbutton(karta_efekty, text="distortion", variable=distortion_var, command=add_distortion, bg=BG_COLOR, fg=CHECK_FG)
+distortion_btn = tk.Checkbutton(karta_efekty, text="distortion", variable=distortion_var, command=add_distortion)
 distortion_btn.grid(row=1, column=4)
 
 gain_var = tk.IntVar()
 gain_var.set(0)
-gain_btn = tk.Checkbutton(karta_efekty, text="gain", variable=gain_var, command=add_Gain, bg=BG_COLOR, fg=CHECK_FG)
+gain_btn = tk.Checkbutton(karta_efekty, text="gain", variable=gain_var, command=add_Gain)
 gain_btn.grid(row=1, column=5)
 
 reverb_var = tk.IntVar()
 reverb_var.set(0)
-reverb_btn = tk.Checkbutton(karta_efekty, text="reverb", variable=reverb_var, command=add_Reverb, bg=BG_COLOR, fg=CHECK_FG)
+reverb_btn = tk.Checkbutton(karta_efekty, text="reverb", variable=reverb_var, command=add_Reverb)
 reverb_btn.grid(row=1, column=6)
 
 
@@ -433,6 +353,5 @@ hl_menu.bind("<<NotebookTabChanged>>", on_tab_change)
 
 
 root.mainloop()
-
 
 
